@@ -10,10 +10,12 @@ import android.widget.TextView;
 
 public class ShoppingItemViewHolder extends RecyclerView.ViewHolder{
     public TextView mNameTextView;
+    public View mItemRoot;
 
     public ShoppingItemViewHolder(View itemView) {
         super(itemView);
 
-        mNameTextView = (TextView)itemView.findViewById(android.R.id.text1);
+        mNameTextView = (TextView)itemView.findViewById(R.id.item_name);
+        mItemRoot = itemView;
     }
 }

@@ -15,14 +15,21 @@ import java.util.List;
 
 public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingItemViewHolder> {
     private List<ShoppingItem> mShoppingItems;
+    private OnShoppingItemSelected mListener;
 
-    public ShoppingListAdapter(List<ShoppingItem> shoppingItems) {
+    public interface OnShoppingItemSelected {
+        void itemSelected(int id);
+    }
+
+    public ShoppingListAdapter(List<ShoppingItem> shoppingItems, OnShoppingItemSelected listener) {
         mShoppingItems = shoppingItems;
+        mListener = listener;
     }
 
     @Override
     public ShoppingItemViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        return new ShoppingItemViewHolder(LayoutInflater.from(parent.getContext()).inflate(android.R.layout.simple_list_item_1,parent,false));
+        return new ShoppingItemViewHolder(LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.shopping_list_item,parent,false));
     }
 
     @Override
@@ -32,21 +39,10 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingItemViewHo
 
         holder.mNameTextView.setText(currentItem.getName());
 
-        // Add an OnClickListener that launches DetailActivity and passes it the item's ID
-        holder.mNameTextView.setOnClickListener(new View.OnClickListener() {
+        holder.mItemRoot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // Get a reference to the MainActivity as a Context
-                Context mainActivity = holder.mNameTextView.getContext();
-
-                // Create the intent
-                Intent intent = new Intent(mainActivity, DetailActivity.class);
-
-                // Add the ID as an extra
-                intent.putExtra(DetailActivity.ITEM_ID_KEY, currentItem.getId());
-
-                // Start the detail activity
-                mainActivity.startActivity(intent);
+                mListener.itemSelected(currentItem.getId());
             }
         });
     }

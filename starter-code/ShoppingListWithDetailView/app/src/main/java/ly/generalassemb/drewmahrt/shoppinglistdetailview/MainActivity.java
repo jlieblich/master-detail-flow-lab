@@ -1,5 +1,6 @@
 package ly.generalassemb.drewmahrt.shoppinglistdetailview;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -9,7 +10,12 @@ import java.util.List;
 
 import ly.generalassemb.drewmahrt.shoppinglistdetailview.setup.DBAssetHelper;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ShoppingListAdapter.OnShoppingItemSelected,
+        DetailFragment.ShoppingItemListener {
+    private ShoppingSQLiteOpenHelper mHelper;
+    private List<ShoppingItem> mShoppingItems;
+    private ShoppingListAdapter mAdapter;
+    private boolean mUseTwoPanes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,16 +26,42 @@ public class MainActivity extends AppCompatActivity {
         DBAssetHelper dbSetup = new DBAssetHelper(MainActivity.this);
         dbSetup.getReadableDatabase();
 
+        mHelper = ShoppingSQLiteOpenHelper.getInstance(this);
+        mShoppingItems = mHelper.getShoppingList();
+
+        //Check if layout contains detail fragment
+        mUseTwoPanes = (findViewById(R.id.detail_fragment_container)!= null);
         //Setup the RecyclerView
         RecyclerView shoppingListRecyclerView = (RecyclerView) findViewById(R.id.shopping_list_recyclerview);
 
-        ShoppingSQLiteOpenHelper db = ShoppingSQLiteOpenHelper.getInstance(this);
-        List<ShoppingItem> shoppingList = db.getShoppingList();
 
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this,LinearLayoutManager.VERTICAL,false);
+        shoppingListRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+        mAdapter = new ShoppingListAdapter(mShoppingItems, this);
+        shoppingListRecyclerView.setAdapter(mAdapter);
+    }
 
-        shoppingListRecyclerView.setLayoutManager(linearLayoutManager);
-        shoppingListRecyclerView.setAdapter(new ShoppingListAdapter(shoppingList));
+    @Override
+    public void itemSelected(int id) {
+        if(mUseTwoPanes) {
+            DetailFragment fragment = DetailFragment.newInstance(id);
+            getSupportFragmentManager().beginTransaction().replace(R.id.detail_fragment_container, fragment).commit();
+        } else {
+            Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+            intent.putExtra(DetailActivity.ITEM_ID_KEY, id);
+            startActivity(intent);
+        }
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mShoppingItems.clear();
+        mShoppingItems.addAll(mHelper.getShoppingList());
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void shoppingItemInteraction(int itemId) {
+        mAdapter.notifyDataSetChanged();
     }
 }
